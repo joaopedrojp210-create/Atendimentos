@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Registro de Atendimentos</title>
+<meta name="theme-color" content="#0b6e7f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Atendimentos">
+<style>
+:root{
+  --bg:#eef2f3; --surface:#ffffff; --ink:#14232b; --muted:#5b6b73; --line:#cfd9dc;
+  --accent:#0b6e7f; --accent-ink:#ffffff; --accent-soft:#d6ecef;
+  --ok:#1f7a3d; --warn:#a86a00; --bad:#b3261e; --info:#1d5fae; --shop:#2b2b2b;
+  --ok-bg:#e1f2e6; --warn-bg:#fbefd6; --bad-bg:#fbe3e1; --info-bg:#e2ecfa; --shop-bg:#e6e6e6;
+  --f-display:"Barlow Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif;
+  --f-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-mono:ui-monospace,Menlo,Consolas,"Roboto Mono",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0e171b; --surface:#16232a; --ink:#e4ecee; --muted:#93a5ac; --line:#2a3b43;
+  --accent:#4fb3c4; --accent-ink:#06191d; --accent-soft:#163a41;
+  --ok:#6cc98a; --warn:#e3b15a; --bad:#f08a82; --info:#86b2f0; --shop:#cfcfcf;
+  --ok-bg:#16301f; --warn-bg:#33270f; --bad-bg:#3a1a18; --info-bg:#172840; --shop-bg:#2a2a2a;
+  color-scheme:dark}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:env(safe-area-inset-top,0px) calc(84px + env(safe-area-inset-bottom,0px))}
+[hidden]{display:none!important}
+.wrap{max-width:640px;margin:0 auto}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg);padding-block:12px 10px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px;justify-content:space-between}
+header.top h1{font-family:var(--f-display);font-weight:700;font-size:23px;letter-spacing:.02em;margin:0;text-transform:uppercase}
+.who{font-size:14px;color:var(--muted);text-align:right;line-height:1.2}
+.net{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;padding:3px 9px;border-radius:99px;margin-top:3px}
+.net.on{background:var(--ok-bg);color:var(--ok)} .net.off{background:var(--warn-bg);color:var(--warn)}
+.net i{width:8px;height:8px;border-radius:50%;background:currentColor;display:block}
+h2{font-family:var(--f-display);font-weight:700;font-size:22px;text-transform:uppercase;letter-spacing:.03em;margin:22px 0 6px}
+h3{font-family:var(--f-display);font-weight:600;font-size:18px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:22px 0 8px}
+p.lead{color:var(--muted);margin:0 0 14px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;min-width:0}
+label{font-weight:600;font-size:15px}
+.req{color:var(--bad)}
+.hint{font-size:13px;color:var(--muted)}
+input,select,textarea{font:inherit;font-size:17px;color:var(--ink);background:var(--surface);border:1.5px solid var(--line);border-radius:8px;padding:12px;width:100%;min-height:50px}
+textarea{min-height:88px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:460px){.row{grid-template-columns:1fr}}
+.tstep{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-bottom:12px}
+.tstep .field{margin:0}
+.btn{font:inherit;font-weight:600;font-size:17px;border:0;border-radius:10px;padding:14px 18px;min-height:52px;cursor:pointer;background:var(--accent);color:var(--accent-ink);display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;text-align:center}
+.btn.sec{background:var(--surface);color:var(--ink);border:1.5px solid var(--line)}
+.btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+.btn.wa{background:#1d8f4e;color:#fff}
+.btn.small{min-height:44px;padding:8px 14px;font-size:15px}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.link{background:none;border:0;color:var(--accent);font:inherit;font-weight:600;padding:10px 0;cursor:pointer;text-decoration:underline}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.actions .btn{flex:1 1 160px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:15px;padding:9px 13px;border-radius:99px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;min-height:44px}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.list{display:flex;flex-direction:column;gap:10px}
+.card .head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.card .unit{font-weight:600;font-size:17px;min-width:0;overflow-wrap:anywhere}
+.pm{font-family:var(--f-mono);font-size:14px;color:var(--muted)}
+.meta{font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px}
+.desc{font-size:15px;overflow-wrap:anywhere}
+.pill{display:inline-block;font-size:13px;font-weight:600;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.s-atend{background:var(--warn-bg);color:var(--warn)} .s-ok{background:var(--ok-bg);color:var(--ok)}
+.s-coi{background:var(--info-bg);color:var(--info)} .s-prog{background:var(--bad-bg);color:var(--bad)}
+.s-cof{background:var(--shop-bg);color:var(--shop)}
+.flags{display:flex;flex-wrap:wrap;gap:6px}
+.flag{font-size:12px;padding:2px 8px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}
+.flag.done{border-color:var(--ok);color:var(--ok)} .flag.pend{border-color:var(--warn);color:var(--warn)}
+nav.bottom{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);
+  display:grid;grid-template-columns:repeat(var(--n,3),1fr);padding-bottom:env(safe-area-inset-bottom,0px);
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+nav.bottom button{font:inherit;font-size:13px;font-weight:600;background:none;border:0;color:var(--muted);padding:9px 2px 10px;min-height:62px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px}
+nav.bottom button svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2}
+nav.bottom button[aria-current="page"]{color:var(--accent)}
+.msgbox{font-family:var(--f-mono);font-size:13.5px;white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px;max-height:340px;overflow:auto;overflow-wrap:anywhere;user-select:text;-webkit-user-select:text}
+.notice{border-radius:10px;padding:12px 14px;font-size:15px;margin:12px 0}
+.notice.warn{background:var(--warn-bg);border:1px solid var(--warn)}
+.notice.info{background:var(--accent-soft);border:1px solid var(--accent)}
+.notice.bad{background:var(--bad-bg);border:1px solid var(--bad)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:10px;font-weight:600;z-index:20;max-width:calc(100% - 32px);text-align:center}
+.err{color:var(--bad);font-size:15px;font-weight:600;min-height:1em}
+.empty{text-align:center;color:var(--muted);padding:26px 10px;border:1.5px dashed var(--line);border-radius:12px}
+.inline-edit{display:grid;grid-template-columns:1fr auto;gap:8px}
+details summary{cursor:pointer;font-weight:600;padding:8px 0}
+.login{max-width:440px;margin:24px auto 0}
+.brand{font-family:var(--f-display);font-weight:700;font-size:30px;text-transform:uppercase;letter-spacing:.02em;margin:8px 0 4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top" id="topo" hidden>
+    <h1>Atendimentos</h1>
+    <div class="who"><div id="whoName"></div><span id="net" class="net off"><i></i><span>Offline</span></span></div>
+  </header>
+  <main id="view"></main>
+</div>
+
+<nav class="bottom" id="nav" aria-label="Navegação" hidden>
+  <button data-tab="novo"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Registrar</button>
+  <button data-tab="servicos"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Serviços</button>
+  <button data-tab="os" id="navOS" hidden><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Fila de OS</button>
+  <button data-tab="perfil"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Perfil</button>
+</nav>
+
+<script>
+/* ======== CONFIGURAÇÃO: cole aqui a URL do App da Web do Apps Script ======== */
+var API_URL = "https://script.google.com/macros/s/AKfycbw_-xyIAuOvMszoZGjuF_B2-eNo6zxuDDOa-AfVacuRN4mszPIZIJYSuR1IUEtUSzZPvg/exec";
+var DOMINIO = "compesa.com.br";
+/* ============================================================================ */
+(function(){
+"use strict";
+var KEY="registro-atendimentos-v2";
+var TIPOS=["Corretiva emergencial","Corretiva programada","Preventiva","Preditiva","Inspeção"];
+var IMPACTOS=["Parada total","Perda parcial de vazão","Sem impacto"];
+var EQUIP=["CMB","Motor","Painel elétrico","Softstart/inversor","Transformador","Válvula/registro","Atuador/motorredutor","Bomba de esgotamento","Outro"];
+var FALHAS=["Não aciona","Desarme por sobrecarga","Desarme por nível","Vazamento em gaxeta","Ruído anormal","Vibração","Travamento","Falta de energia","Outro"];
+var STATUS=[
+  {v:"Em atendimento",c:"s-atend",e:"🟡"},
+  {v:"Resolvido",c:"s-ok",e:"🟢"},
+  {v:"Resolvido pela GMM-COI",c:"s-coi",e:"🔵"},
+  {v:"Cancelado/Remarcado/Aguardando programação",c:"s-prog",e:"🔴"},
+  {v:"Recolhido para oficina/COF",c:"s-cof",e:"⚫"}
+];
+var OSST=["Não lançada","Aberta no sistema","Fechada no sistema"];
+var REGIOES_PADRAO=["CSM Arcoverde","CSM Pajeú","CSM Moxotó","CSM Alto Pajeú","CSM Norte","CSM Oeste/Leste","CSM Sul","CPM"];
+var OUTRA="__digitar";
+
+/* ---------- armazenamento no aparelho ---------- */
+function vazio(){return {token:null,perfil:null,registros:[],unidades:[],regioes:REGIOES_PADRAO.slice(),pessoas:[],ultimaSync:null};}
+var S=vazio(), storageOk=true;
+try{var raw=localStorage.getItem(KEY);if(raw)S=Object.assign(vazio(),JSON.parse(raw));}catch(e){storageOk=false;}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));storageOk=true;}catch(e){storageOk=false;}}
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+
+/* ---------- utilitários ---------- */
+function $(s,r){return (r||document).querySelector(s);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function uid(){return "a"+Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+function pad(n){return (n<10?"0":"")+n;}
+function nowLocal(){var d=new Date();return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes());}
+function toDate(s){if(!s)return null;var d=new Date(s);return isNaN(d)?null:d;}
+function fmtData(s){var d=toDate(s);return d?pad(d.getDate())+"/"+pad(d.getMonth()+1)+"/"+String(d.getFullYear()).slice(2):"";}
+function fmtHora(s){var d=toDate(s);return d?pad(d.getHours())+":"+pad(d.getMinutes()):"";}
+function fmtDataHora(s){var d=toDate(s);return d?pad(d.getDate())+"/"+pad(d.getMonth()+1)+" "+pad(d.getHours())+":"+pad(d.getMinutes()):"";}
+function mesmoDia(a,b){return String(a||"").slice(0,10)===String(b||"").slice(0,10);}
+function stInfo(v){for(var i=0;i<STATUS.length;i++)if(STATUS[i].v===v)return STATUS[i];return STATUS[0];}
+function opts(arr,sel,vaz){return (vaz?'<option value="">'+vaz+'</option>':"")+arr.map(function(x){return '<option'+(x===sel?" selected":"")+'>'+esc(x)+'</option>';}).join("");}
+function hoje(){return nowLocal().slice(0,10);}
+function online(){return navigator.onLine!==false;}
+function apiOk(){return /^https:\/\//.test(API_URL);}
+var toastT;
+function toast(m){var t=$(".toast");if(!t){t=document.createElement("div");t.className="toast";t.setAttribute("role","status");document.body.appendChild(t);}t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true;},2800);}
+function ehResp(){return S.perfil&&(S.perfil.papel==="Responsável pela OS"||S.perfil.papel==="Administrador");}
+
+/* ---------- comunicação com a planilha ---------- */
+function api(acao,dados){
+  if(!apiOk())return Promise.reject(new Error("O app ainda não foi ligado à planilha (API_URL)."));
+  var corpo=Object.assign({acao:acao,token:S.token},dados||{});
+  return fetch(API_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(corpo),redirect:"follow"})
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(!j.ok&&j.erro==="SESSAO_INVALIDA"){encerrarSessao("Sua sessão expirou ou o acesso foi bloqueado. Entre novamente.");throw new Error("Sessão inválida");}
+      return j;
+    });
+}
+function encerrarSessao(msg){S.token=null;save();rota="entrar";aviso=msg||"";render();}
+
+/* ---------- sincronização ---------- */
+var sincronizando=false, erroSync="";
+function pendentes(){return S.registros.filter(function(r){return !r.sincronizadoEm||r.atualizadoEm>r.sincronizadoEm;});}
+function atualizaNet(){
+  var el=$("#net");if(!el)return;var p=pendentes().length;var on=online()&&apiOk();
+  el.className="net "+(on&&!p&&!erroSync?"on":"off");
+  el.lastElementChild.textContent=!on?(p?p+" aguardando envio":"Sem internet"):(sincronizando?"Enviando...":(p?p+" aguardando envio":"Sincronizado"));
+}
+function mesclar(rec){
+  if(!rec||!rec.id)return;
+  var i=S.registros.findIndex(function(x){return x.id===rec.id;});
+  if(i<0){rec.sincronizadoEm=rec.atualizadoEm;S.registros.push(rec);return;}
+  var loc=S.registros[i];
+  if((rec.atualizadoEm||"")>=(loc.atualizadoEm||"")){
+    var comp=loc.compartilhadoEm;S.registros[i]=Object.assign({},rec,{sincronizadoEm:rec.atualizadoEm,compartilhadoEm:comp});
+  }
+}
+function sincronizar(manual){
+  if(!S.token||!online()||!apiOk()||sincronizando){atualizaNet();return Promise.resolve();}
+  sincronizando=true;atualizaNet();
+  var lote=pendentes().slice(0,50).map(function(r){var c=JSON.parse(JSON.stringify(r));delete c.sincronizadoEm;delete c.compartilhadoEm;return c;});
+  var p=lote.length?api("salvar",{registros:lote}).then(function(j){
+      if(!j.ok)throw new Error(j.erro);
+      (j.salvos||[]).forEach(function(s){mesclar(s.registro);});
+      (j.recusados||[]).forEach(function(id){var r=S.registros.find(function(x){return x.id===id;});if(r)r.sincronizadoEm=r.atualizadoEm;});
+    }):Promise.resolve();
+  return p.then(function(){return api("listar");}).then(function(j){
+      if(!j.ok)throw new Error(j.erro);
+      (j.registros||[]).forEach(mesclar);
+      if(j.perfil)S.perfil=j.perfil;
+      return api("config");
+    }).then(function(j){
+      if(j&&j.ok){S.unidades=j.unidades||S.unidades;S.regioes=j.regioes||S.regioes;if(j.perfil)S.perfil=j.perfil;}
+      S.ultimaSync=new Date().toISOString();erroSync="";save();
+      if(manual)toast("Sincronizado");
+    }).catch(function(e){erroSync=e.message||"erro";if(manual)toast("Não foi possível sincronizar agora. Tentaremos de novo quando a conexão melhorar.");})
+    .then(function(){sincronizando=false;save();atualizaNet();if(pendentes().length&&!erroSync)return sincronizar();if(rota==="servicos"||rota==="os")render();});
+}
+window.addEventListener("online",function(){erroSync="";sincronizar();});
+window.addEventListener("offline",atualizaNet);
+setInterval(function(){if(online()&&S.token)sincronizar();},120000);
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&online()&&S.token)sincronizar();});
+
+/* ---------- mensagens do WhatsApp ---------- */
+function linhaHorario(r){
+  if(!r.tInicio&&!r.tFim)return "";
+  var f=r.tFim?(mesmoDia(r.tInicio,r.tFim)?fmtHora(r.tFim):fmtData(r.tFim)+" "+fmtHora(r.tFim)):"em andamento";
+  return "*Início do serviço:* "+(r.tInicio?fmtHora(r.tInicio):"-")+" | *Fim do serviço:* "+f;
+}
+function msgServico(r){
+  var st=stInfo(r.status),L=[];
+  L.push("*Balanço dos Serviços - "+(r.regiao||"")+"*");L.push("");
+  L.push("*Local:* "+(r.unidade||"")+(r.idObj?" (ID objeto "+r.idObj+")":""));
+  L.push("*PM:* "+(r.pm||"A ser gerado"));
+  if(r.tInicio)L.push("*Data:* "+fmtData(r.tInicio));
+  L.push("*Equipe:* "+(r.equipe||[]).join(", "));
+  if(r.equipamento)L.push("*Equipamento:* "+r.equipamento+(r.equipId?" - "+r.equipId:""));
+  if(r.diretriz)L.push("*Diretriz:* "+r.diretriz);
+  L.push("*Tipo Manut.:* "+(r.tipo||""));
+  if(r.impacto&&r.impacto!=="Sem impacto")L.push("*Impacto:* "+r.impacto);
+  L.push(st.e+" *Status:* "+r.status);
+  var def=[r.falha,r.defeito].filter(Boolean).join(" - ");
+  if(def)L.push("*Defeito:* "+def);
+  if(r.acao)L.push("*Resumo:* "+r.acao);
+  var h=linhaHorario(r);if(h)L.push(h);
+  if(r.obs){L.push("");L.push("Obs.: "+r.obs);}
+  return L.join("\n");
+}
+function msgBoletim(lista,titulo){
+  var L=["*"+titulo+"*",""],porTipo={};
+  lista.forEach(function(r){(porTipo[r.tipo||"Outros"]=porTipo[r.tipo||"Outros"]||[]).push(r);});
+  TIPOS.concat(["Outros"]).forEach(function(t){
+    var g=porTipo[t];if(!g)return;
+    L.push("*"+t.toUpperCase()+"*");L.push("");
+    var porReg={};g.forEach(function(r){(porReg[r.regiao||"-"]=porReg[r.regiao||"-"]||[]).push(r);});
+    Object.keys(porReg).forEach(function(rg){
+      L.push("*"+rg+":*");
+      porReg[rg].forEach(function(r){
+        var def=[r.falha,r.defeito].filter(Boolean).join(" - ");
+        L.push(stInfo(r.status).e+"PM "+(r.pm||"A ser gerado")+" - "+(r.unidade||"")+(r.equipId?" - "+r.equipId:"")+(def?" - "+def+".":""));
+        if(r.acao)L.push("*"+r.acao+"*");
+        var h=linhaHorario(r);if(h)L.push(h.replace(/\*/g,""));
+      });
+      L.push("");
+    });
+  });
+  STATUS.forEach(function(s){L.push(s.e+s.v);});
+  return L.join("\n");
+}
+var celular=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+function waHref(t){return celular?"whatsapp://send?text="+encodeURIComponent(t):"https://api.whatsapp.com/send?text="+encodeURIComponent(t);}
+function copiar(t,el){
+  var ok=function(){toast("Mensagem copiada");};
+  try{navigator.clipboard.writeText(t).then(ok,function(){selecionar(el);});}catch(e){selecionar(el);}
+}
+function selecionar(el){if(!el)return;var rg=document.createRange();rg.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(rg);toast("Texto selecionado. Toque em Copiar.");}
+function compartilhar(t,el){
+  if(navigator.share){navigator.share({text:t}).catch(function(){});}else copiar(t,el);
+}
+function botoesEnvio(id){
+  return '<div class="actions"><a class="btn wa" id="'+id+'Wa" href="#">Enviar no WhatsApp</a>'+
+    '<button class="btn sec" id="'+id+'Copy" type="button">Copiar</button>'+
+    (navigator.share?'<button class="btn sec" id="'+id+'Share" type="button">Outros apps</button>':"")+'</div>';
+}
+function ligarEnvio(id,texto,box,marcar){
+  var a=$("#"+id+"Wa");a.href=waHref(texto);if(!celular)a.target="_blank";
+  a.addEventListener("click",marcar);
+  $("#"+id+"Copy").addEventListener("click",function(){copiar(texto,box);marcar();});
+  var s=$("#"+id+"Share");if(s)s.addEventListener("click",function(){compartilhar(texto,box);marcar();});
+}
+
+/* ---------- gravação local ---------- */
+function achar(id){return S.registros.find(function(r){return r.id===id;})||null;}
+function gravar(r,acao){
+  r.atualizadoEm=new Date().toISOString();
+  r.historico=(r.historico||[]).concat([{por:S.perfil.nome,em:r.atualizadoEm,acao:acao}]).slice(-30);
+  var i=S.registros.findIndex(function(x){return x.id===r.id;});
+  if(i<0)S.registros.unshift(r);else S.registros[i]=r;
+  save();atualizaNet();sincronizar();
+}
+
+/* ---------- navegação ---------- */
+var rota=S.token?"servicos":"entrar", editId=null, aviso="", filtro="hoje", verEquipe=false, filtroOS="pend", emailPend="";
+function ir(t,id){rota=t;editId=id||null;render();window.scrollTo(0,0);}
+document.querySelectorAll("nav.bottom button").forEach(function(b){b.addEventListener("click",function(){ir(b.dataset.tab);});});
+function render(){
+  var logado=!!S.token&&!!S.perfil;
+  if(!logado&&["entrar","cadastrar","confirmar","recuperar"].indexOf(rota)<0)rota="entrar";
+  $("#topo").hidden=!logado;$("#nav").hidden=!logado;
+  if(logado){
+    $("#whoName").textContent=S.perfil.nome+" · "+S.perfil.equipe;
+    $("#navOS").hidden=!ehResp();$("#nav").style.setProperty("--n",ehResp()?4:3);
+    var ativa=rota==="detalhe"?"servicos":rota;
+    document.querySelectorAll("nav.bottom button").forEach(function(b){if(b.dataset.tab===ativa)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current");});
+  }
+  var v=$("#view");
+  ({entrar:telaEntrar,cadastrar:telaCadastrar,confirmar:telaConfirmar,recuperar:telaRecuperar,
+    novo:telaForm,servicos:telaServicos,detalhe:telaDetalhe,os:telaOS,perfil:telaPerfil}[rota]||telaServicos)(v);
+  atualizaNet();
+}
+
+/* ---------- telas de acesso ---------- */
+function cabLogin(t,sub){return '<div class="login"><div class="brand">Registro de Atendimentos</div><p class="lead">'+sub+'</p>'+(aviso?'<div class="notice warn">'+esc(aviso)+'</div>':"")+(!apiOk()?'<div class="notice bad">Este app ainda não foi ligado à planilha. O administrador precisa colar a URL do Apps Script no arquivo index.html.</div>':"")+(!online()?'<div class="notice warn">Sem internet. O primeiro acesso precisa de conexão; depois o app funciona offline.</div>':"")+'<h2>'+t+'</h2>';}
+function travar(f,on){f.querySelectorAll("button,input,select").forEach(function(x){x.disabled=on;});}
+function telaEntrar(v){
+  v.innerHTML=cabLogin("Entrar","Manutenção eletromecânica · use seu e-mail corporativo.")+
+   '<form id="fE"><div class="field"><label for="eEmail">E-mail corporativo</label><input id="eEmail" type="email" autocomplete="username" placeholder="nome@'+DOMINIO+'" required></div>'+
+   '<div class="field"><label for="eSenha">Senha</label><input id="eSenha" type="password" autocomplete="current-password" required></div>'+
+   '<p class="err" id="eErr" role="alert"></p><button class="btn block" type="submit">Entrar</button></form>'+
+   '<div class="actions"><button class="link" id="eCad" type="button">Primeiro acesso: criar cadastro</button><button class="link" id="eRec" type="button">Esqueci minha senha</button></div></div>';
+  $("#eCad").onclick=function(){aviso="";ir("cadastrar");};
+  $("#eRec").onclick=function(){aviso="";emailPend=$("#eEmail").value.trim();ir("recuperar");};
+  $("#fE").addEventListener("submit",function(e){e.preventDefault();var f=this;
+    var em=$("#eEmail").value.trim().toLowerCase();
+    if(em.split("@")[1]!==DOMINIO){$("#eErr").textContent="Use seu e-mail @"+DOMINIO+".";return;}
+    travar(f,true);$("#eErr").textContent="";
+    api("entrar",{email:em,senha:$("#eSenha").value}).then(function(j){
+      if(!j.ok){if(j.pendente){emailPend=em;aviso="Digite o código enviado para "+em+".";ir("confirmar");return;}throw new Error(j.erro);}
+      entrou(j);
+    }).catch(function(err){$("#eErr").textContent=online()?err.message:"Sem internet. Conecte-se para entrar pela primeira vez.";travar(f,false);});
+  });
+}
+function telaCadastrar(v){
+  v.innerHTML=cabLogin("Primeiro acesso","Você vai receber um código no seu e-mail corporativo para confirmar.")+
+   '<form id="fC"><div class="field"><label for="cEmail">E-mail corporativo <span class="req">*</span></label><input id="cEmail" type="email" autocomplete="username" placeholder="nome@'+DOMINIO+'" required></div>'+
+   '<div class="field"><label for="cNome">Nome <span class="req">*</span></label><input id="cNome" autocomplete="name" required></div>'+
+   '<div class="field"><label for="cEquipe">Equipe <span class="req">*</span></label><input id="cEquipe" placeholder="Ex.: Eletromecânica Arcoverde" required></div>'+
+   '<div class="field"><label for="cReg">Região / CSM <span class="req">*</span></label><select id="cReg" required>'+opts(S.regioes,"","Escolha")+'</select></div>'+
+   '<div class="field"><label for="cSenha">Crie uma senha <span class="req">*</span></label><input id="cSenha" type="password" autocomplete="new-password" minlength="6" required><span class="hint">Mínimo de 6 caracteres.</span></div>'+
+   '<p class="err" id="cErr" role="alert"></p><button class="btn block" type="submit">Enviar código</button></form>'+
+   '<button class="link" id="cVolta" type="button">Já tenho cadastro</button></div>';
+  $("#cVolta").onclick=function(){aviso="";ir("entrar");};
+  $("#fC").addEventListener("submit",function(e){e.preventDefault();var f=this;
+    var d={email:$("#cEmail").value.trim().toLowerCase(),nome:$("#cNome").value.trim(),equipe:$("#cEquipe").value.trim(),regiao:$("#cReg").value,senha:$("#cSenha").value};
+    if(d.email.split("@")[1]!==DOMINIO){$("#cErr").textContent="Use seu e-mail @"+DOMINIO+".";return;}
+    if(!d.nome||!d.equipe||!d.regiao){$("#cErr").textContent="Preencha nome, equipe e região.";return;}
+    if(d.senha.length<6){$("#cErr").textContent="A senha precisa ter pelo menos 6 caracteres.";return;}
+    travar(f,true);
+    api("cadastrar",d).then(function(j){if(!j.ok)throw new Error(j.erro);emailPend=d.email;aviso="Enviamos um código para "+d.email+". Confira também a caixa de spam.";ir("confirmar");})
+      .catch(function(err){$("#cErr").textContent=online()?err.message:"Sem internet. O cadastro precisa de conexão.";travar(f,false);});
+  });
+}
+function telaConfirmar(v){
+  v.innerHTML=cabLogin("Confirmar e-mail","Digite o código de 6 números que chegou no seu e-mail.")+
+   '<form id="fK"><div class="field"><label for="kEmail">E-mail</label><input id="kEmail" type="email" value="'+esc(emailPend)+'" required></div>'+
+   '<div class="field"><label for="kCod">Código</label><input id="kCod" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></div>'+
+   '<p class="err" id="kErr" role="alert"></p><button class="btn block" type="submit">Confirmar e entrar</button></form>'+
+   '<button class="link" id="kVolta" type="button">Voltar</button></div>';
+  $("#kVolta").onclick=function(){aviso="";ir("entrar");};
+  $("#fK").addEventListener("submit",function(e){e.preventDefault();var f=this;travar(f,true);
+    api("confirmar",{email:$("#kEmail").value.trim().toLowerCase(),codigo:$("#kCod").value.trim()}).then(function(j){if(!j.ok)throw new Error(j.erro);entrou(j);})
+      .catch(function(err){$("#kErr").textContent=err.message;travar(f,false);});
+  });
+}
+function telaRecuperar(v){
+  v.innerHTML=cabLogin("Nova senha","Enviaremos um código para o seu e-mail corporativo.")+
+   '<form id="fR"><div class="field"><label for="rEmail">E-mail corporativo</label><input id="rEmail" type="email" value="'+esc(emailPend)+'" required></div>'+
+   '<button class="btn sec block" type="button" id="rEnviar">Enviar código</button>'+
+   '<div class="field" style="margin-top:14px"><label for="rCod">Código recebido</label><input id="rCod" inputmode="numeric" maxlength="6"></div>'+
+   '<div class="field"><label for="rSenha">Nova senha</label><input id="rSenha" type="password" autocomplete="new-password" minlength="6"></div>'+
+   '<p class="err" id="rErr" role="alert"></p><button class="btn block" type="submit">Salvar nova senha e entrar</button></form>'+
+   '<button class="link" id="rVolta" type="button">Voltar</button></div>';
+  $("#rVolta").onclick=function(){aviso="";ir("entrar");};
+  $("#rEnviar").onclick=function(){var b=this;b.disabled=true;
+    api("recuperar",{email:$("#rEmail").value.trim().toLowerCase()}).then(function(){toast("Se o e-mail tiver cadastro, o código foi enviado.");b.disabled=false;})
+      .catch(function(err){$("#rErr").textContent=err.message;b.disabled=false;});};
+  $("#fR").addEventListener("submit",function(e){e.preventDefault();var f=this;
+    if($("#rSenha").value.length<6){$("#rErr").textContent="A senha precisa ter pelo menos 6 caracteres.";return;}
+    travar(f,true);
+    api("redefinir",{email:$("#rEmail").value.trim().toLowerCase(),codigo:$("#rCod").value.trim(),senha:$("#rSenha").value}).then(function(j){if(!j.ok)throw new Error(j.erro);entrou(j);})
+      .catch(function(err){$("#rErr").textContent=err.message;travar(f,false);});
+  });
+}
+function entrou(j){
+  if(S.perfil&&S.perfil.email!==j.perfil.email){S.registros=[];S.pessoas=[];}
+  S.token=j.token;S.perfil=j.perfil;aviso="";
+  if(S.pessoas.indexOf(j.perfil.nome)<0)S.pessoas.push(j.perfil.nome);
+  save();ir("servicos");sincronizar();
+}
+
+/* ---------- perfil ---------- */
+function telaPerfil(v){
+  var p=S.perfil;var pend=pendentes().length;
+  v.innerHTML='<h2>Perfil</h2><div class="card"><strong>'+esc(p.nome)+'</strong><span class="hint">'+esc(p.email)+'</span><span>'+esc(p.equipe)+' · '+esc(p.regiao)+'</span><span class="pill s-coi" style="align-self:flex-start">'+esc(p.papel)+'</span></div>'+
+   (!storageOk?'<div class="notice bad">Este navegador não está deixando salvar dados no aparelho. Não use modo anônimo.</div>':"")+
+   '<h3>Sincronização</h3><p class="lead">'+(pend?pend+" atendimento(s) aguardando envio.":"Tudo enviado para a base.")+(S.ultimaSync?" Última sincronização: "+fmtData(S.ultimaSync)+" "+fmtHora(S.ultimaSync)+".":"")+'</p>'+
+   (erroSync&&online()?'<div class="notice warn">Última tentativa falhou: '+esc(erroSync)+'</div>':"")+
+   '<div class="actions"><button class="btn sec" id="pSync" type="button">Sincronizar agora</button></div>'+
+   '<h3>Instalar no celular</h3><p class="lead">No Android (Chrome): menu de três pontos e "Instalar app" ou "Adicionar à tela inicial". No iPhone (Safari): botão Compartilhar e "Adicionar à Tela de Início". Depois de instalado, o app abre mesmo sem internet.</p>'+
+   '<h3>Conta</h3><p class="lead">Para mudar equipe, região ou função, fale com o administrador da planilha.</p>'+
+   '<div class="actions"><button class="btn ghost" id="pSair" type="button">Sair deste aparelho</button></div><p class="err" id="pErr"></p>';
+  $("#pSync").onclick=function(){if(!online()){toast("Sem internet agora. Os registros sobem sozinhos quando a conexão voltar.");return;}sincronizar(true);};
+  $("#pSair").onclick=function(){
+    if(pendentes().length){$("#pErr").textContent="Há registros ainda não enviados. Conecte-se e sincronize antes de sair, para não perdê-los.";return;}
+    var t=S.token;if(online())api("sair",{token:t}).catch(function(){});
+    S.token=null;S.registros=[];save();ir("entrar");};
+}
+
+/* ---------- formulário ---------- */
+function telaForm(v){
+  var base=editId&&achar(editId);
+  var r=base?JSON.parse(JSON.stringify(base)):{id:uid(),autor:S.perfil.nome,autorEmail:S.perfil.email,equipeNome:S.perfil.equipe,regiao:S.perfil.regiao,pm:"",equipe:[S.perfil.nome],tipo:"Corretiva emergencial",impacto:"Parada total",status:"Em atendimento",osStatus:"Não lançada",tInicio:nowLocal()};
+  var pessoas=S.pessoas.slice();(r.equipe||[]).forEach(function(n){if(pessoas.indexOf(n)<0)pessoas.push(n);});
+  var regioes=S.regioes.slice();if(r.regiao&&regioes.indexOf(r.regiao)<0)regioes.push(r.regiao);
+  var h='<h2>'+(base?"Atualizar atendimento":"Novo atendimento")+'</h2><p class="lead">Salva no celular mesmo sem internet. <span class="req">*</span> = obrigatório.</p><form id="fAt" novalidate>'+
+   '<h3>Local</h3><div class="field"><label for="fReg">Região / CSM <span class="req">*</span></label><select id="fReg">'+opts(regioes,r.regiao,"Escolha a região")+'</select></div>'+
+   '<div class="field"><label for="fUn">Unidade <span class="req">*</span></label><input id="fBusca" type="search" placeholder="Buscar unidade" aria-label="Buscar unidade" hidden><select id="fUn"></select>'+
+   '<input id="fUnOutra" placeholder="Digite o nome da unidade" hidden><span class="hint" id="fUnInfo"></span></div>'+
+   '<div class="row"><div class="field"><label for="fPm">Número da PM / OS</label><input id="fPm" inputmode="numeric" placeholder="A ser gerado" value="'+esc(r.pm)+'"></div>'+
+   '<div class="field"><label for="fEq">Equipamento <span class="req">*</span></label><select id="fEq">'+opts(EQUIP,r.equipamento,"Escolha")+'</select></div></div>'+
+   '<div class="field"><label for="fEqId">Identificação do equipamento</label><input id="fEqId" placeholder="Ex.: CMB 02" value="'+esc(r.equipId)+'"></div>'+
+   '<h3>Tipo e impacto</h3><div class="field"><label>Tipo de manutenção <span class="req">*</span></label><div class="chips" data-grp="tipo">'+TIPOS.map(function(t){return '<button type="button" class="chip" aria-pressed="'+(r.tipo===t)+'" data-v="'+t+'">'+t+'</button>';}).join("")+'</div></div>'+
+   '<div class="field"><label>Impacto na operação <span class="req">*</span></label><div class="chips" data-grp="impacto">'+IMPACTOS.map(function(t){return '<button type="button" class="chip" aria-pressed="'+(r.impacto===t)+'" data-v="'+t+'">'+t+'</button>';}).join("")+'</div></div>'+
+   '<h3>Falha e serviço</h3><div class="field"><label for="fFalha">Modo de falha</label><select id="fFalha">'+opts(FALHAS,r.falha,"Escolha")+'</select></div>'+
+   '<div class="field"><label for="fDef">Descrição do defeito</label><input id="fDef" placeholder="Ex.: suspeita de problema no acoplamento" value="'+esc(r.defeito)+'"></div>'+
+   '<div class="field"><label for="fDir">Diretriz / serviço solicitado</label><input id="fDir" placeholder="Ex.: retirar e lavar filtros dos quartos de comando" value="'+esc(r.diretriz)+'"></div>'+
+   '<div class="field"><label for="fAcao">O que foi feito (feedback)</label><textarea id="fAcao" placeholder="Ex.: retirados e lavados os filtros, limpeza dos ventiladores">'+esc(r.acao)+'</textarea></div>'+
+   '<h3>Equipe presente</h3><div class="chips" id="fPessoas">'+pessoas.map(function(n){return '<button type="button" class="chip" aria-pressed="'+((r.equipe||[]).indexOf(n)>=0)+'" data-v="'+esc(n)+'">'+esc(n)+'</button>';}).join("")+'</div>'+
+   '<div class="inline-edit" style="margin-top:8px"><input id="fNovaP" aria-label="Adicionar pessoa" placeholder="Adicionar nome"><button type="button" class="btn sec small" id="fAddP">Adicionar</button></div>'+
+   '<h3>Horários do serviço</h3>'+
+   '<div class="tstep"><div class="field"><label for="t_tInicio">Início do serviço <span class="req">*</span></label><input type="datetime-local" id="t_tInicio" value="'+esc(r.tInicio||"")+'"></div><button type="button" class="btn sec small" data-agora="tInicio">Agora</button></div>'+
+   '<div class="tstep"><div class="field"><label for="t_tFim">Fim do serviço</label><input type="datetime-local" id="t_tFim" value="'+esc(r.tFim||"")+'"><span class="hint">Obrigatório para encerrar como resolvido.</span></div><button type="button" class="btn sec small" data-agora="tFim">Agora</button></div>'+
+   '<details'+(r.tAbertura||r.tFalha?" open":"")+'><summary>Outros horários (opcional)</summary>'+
+   '<div class="tstep"><div class="field"><label for="t_tAbertura">Abertura do chamado</label><input type="datetime-local" id="t_tAbertura" value="'+esc(r.tAbertura||"")+'"></div><button type="button" class="btn sec small" data-agora="tAbertura">Agora</button></div>'+
+   '<div class="tstep"><div class="field"><label for="t_tFalha">Parada do equipamento</label><input type="datetime-local" id="t_tFalha" value="'+esc(r.tFalha||"")+'"></div><button type="button" class="btn sec small" data-agora="tFalha">Agora</button></div></details>'+
+   '<h3>Situação</h3><div class="field"><label for="fSt">Status <span class="req">*</span></label><select id="fSt">'+opts(STATUS.map(function(s){return s.v;}),r.status)+'</select></div>'+
+   '<div class="field"><label for="fObs">Observações</label><textarea id="fObs" placeholder="Ex.: os filtros já ficaram instalados">'+esc(r.obs)+'</textarea></div>'+
+   '<p class="err" id="fErr" role="alert"></p><div class="actions"><button class="btn" type="submit">Salvar</button><button class="btn sec" type="button" id="fCancel">Cancelar</button></div></form>';
+  v.innerHTML=h;
+
+  var sel={tipo:r.tipo,impacto:r.impacto};
+  v.querySelectorAll(".chips[data-grp]").forEach(function(g){g.addEventListener("click",function(e){var b=e.target.closest(".chip");if(!b)return;sel[g.dataset.grp]=b.dataset.v;g.querySelectorAll(".chip").forEach(function(c){c.setAttribute("aria-pressed",c===b);});});});
+  $("#fPessoas").addEventListener("click",function(e){var b=e.target.closest(".chip");if(b)b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")!=="true");});
+  $("#fAddP").onclick=function(){var n=$("#fNovaP").value.trim();if(!n)return;if(S.pessoas.indexOf(n)<0){S.pessoas.push(n);save();}
+    var b=document.createElement("button");b.type="button";b.className="chip";b.dataset.v=n;b.textContent=n;b.setAttribute("aria-pressed","true");$("#fPessoas").appendChild(b);$("#fNovaP").value="";};
+
+  function unidadesDa(rg){return S.unidades.filter(function(u){return u.regiao===rg;}).sort(function(a,b){return a.nome.localeCompare(b.nome,"pt");});}
+  function montarUn(manter){
+    var rg=$("#fReg").value,lista=unidadesDa(rg),q=($("#fBusca").value||"").toLowerCase();
+    $("#fBusca").hidden=lista.length<=10;
+    var vis=q?lista.filter(function(u){return u.nome.toLowerCase().indexOf(q)>=0;}):lista;
+    var atual=manter!==undefined?manter:$("#fUn").value;
+    $("#fUn").innerHTML=(rg?'<option value="">'+(lista.length?"Escolha a unidade":"Nenhuma unidade cadastrada nesta região")+'</option>':'<option value="">Escolha primeiro a região</option>')+
+      vis.map(function(u){return '<option'+(u.nome===atual?" selected":"")+'>'+esc(u.nome)+'</option>';}).join("")+
+      (rg?'<option value="'+OUTRA+'"'+(atual===OUTRA?" selected":"")+'>Não encontrei a unidade: digitar</option>':"");
+    $("#fUn").disabled=!rg;infoUn();
+  }
+  function infoUn(){
+    var n=$("#fUn").value;$("#fUnOutra").hidden=n!==OUTRA;
+    var u=S.unidades.find(function(x){return x.nome===n&&x.regiao===$("#fReg").value;});
+    $("#fUnInfo").textContent=n===OUTRA?"A unidade digitada será revisada pelo administrador.":(u?"ID objeto: "+(u.idObj||"não cadastrado")+" · Centro de custo: "+(u.cc||"não cadastrado"):"");
+  }
+  var conhecida=r.unidade&&S.unidades.some(function(u){return u.nome===r.unidade&&u.regiao===r.regiao;});
+  montarUn(r.unidade?(conhecida?r.unidade:OUTRA):"");
+  if(r.unidade&&!conhecida)$("#fUnOutra").value=r.unidade;
+  $("#fReg").addEventListener("change",function(){$("#fBusca").value="";montarUn("");});
+  $("#fBusca").addEventListener("input",function(){montarUn();});
+  $("#fUn").addEventListener("change",infoUn);
+  v.querySelectorAll("[data-agora]").forEach(function(b){b.onclick=function(){$("#t_"+b.dataset.agora).value=nowLocal();};});
+  $("#fCancel").onclick=function(){ir(base?"detalhe":"servicos",base?r.id:null);};
+
+  $("#fAt").addEventListener("submit",function(e){e.preventDefault();
+    var digitada=$("#fUn").value===OUTRA, un=digitada?$("#fUnOutra").value.trim():$("#fUn").value;
+    var u=digitada?null:S.unidades.find(function(x){return x.nome===un&&x.regiao===$("#fReg").value;});
+    Object.assign(r,{regiao:$("#fReg").value,unidade:un,unidadeDigitada:digitada,idObj:u?u.idObj:"",cc:u?u.cc:"",pm:$("#fPm").value.trim(),
+      equipamento:$("#fEq").value,equipId:$("#fEqId").value.trim(),tipo:sel.tipo,impacto:sel.impacto,falha:$("#fFalha").value,
+      defeito:$("#fDef").value.trim(),diretriz:$("#fDir").value.trim(),acao:$("#fAcao").value.trim(),
+      equipe:Array.prototype.map.call(v.querySelectorAll('#fPessoas .chip[aria-pressed="true"]'),function(c){return c.dataset.v;}),
+      status:$("#fSt").value,obs:$("#fObs").value.trim(),
+      tInicio:$("#t_tInicio").value,tFim:$("#t_tFim").value,tAbertura:$("#t_tAbertura").value,tFalha:$("#t_tFalha").value});
+    var erro=validar(r);
+    if(erro){$("#fErr").textContent=erro;return;}
+    gravar(r,base?"atualizou":"criou");
+    toast(online()?"Salvo":"Salvo no celular. Envia quando tiver internet.");
+    ir("detalhe",r.id);
+  });
+}
+function validar(r){
+  if(!r.regiao)return "Escolha a região.";
+  if(!r.unidade)return "Escolha a unidade ou digite o nome.";
+  if(!r.equipamento)return "Escolha o equipamento.";
+  if(!r.tInicio)return "Informe o horário de início do serviço.";
+  if(r.tFim&&r.tFim<r.tInicio)return "O fim do serviço está antes do início. Corrija os horários.";
+  if(r.tAbertura&&r.tAbertura>r.tInicio)return "A abertura do chamado está depois do início do serviço.";
+  if(r.tFalha&&r.tAbertura&&r.tFalha>r.tAbertura)return "A parada do equipamento está depois da abertura do chamado.";
+  if((r.status==="Resolvido"||r.status==="Resolvido pela GMM-COI")){
+    if(!r.tFim)return "Para encerrar como resolvido, informe o fim do serviço.";
+    if(!r.acao)return "Para encerrar, descreva o que foi feito.";
+  }
+  return "";
+}
+
+/* ---------- detalhe ---------- */
+function flags(r){
+  var f=[],sinc=r.sincronizadoEm&&r.sincronizadoEm>=r.atualizadoEm;
+  f.push('<span class="flag '+(sinc?"done":"pend")+'">'+(sinc?"Sincronizado":"Salvo no celular")+'</span>');
+  if(r.compartilhadoEm)f.push('<span class="flag done">WhatsApp '+fmtDataHora(r.compartilhadoEm)+'</span>');
+  f.push('<span class="flag '+(r.osStatus==="Fechada no sistema"?"done":"pend")+'">OS: '+esc(r.osStatus||"Não lançada")+'</span>');
+  return f.join("");
+}
+function telaDetalhe(v){
+  var r=achar(editId);if(!r){ir("servicos");return;}
+  var st=stInfo(r.status),txt=msgServico(r),meu=r.autorEmail===S.perfil.email;
+  v.innerHTML='<h2>'+esc(r.unidade)+'</h2><div class="flags" style="margin-bottom:10px"><span class="pill '+st.c+'">'+esc(r.status)+'</span>'+flags(r)+'</div>'+
+   '<p class="lead">Confira e envie para o grupo. Sem internet, o WhatsApp guarda a mensagem e envia sozinho quando o sinal voltar.</p>'+
+   '<div class="msgbox" id="dMsg">'+esc(txt)+'</div>'+botoesEnvio("d")+
+   '<div class="actions">'+(meu||ehResp()?'<button class="btn ghost" id="dEdit" type="button">Atualizar este atendimento</button>':"")+'<button class="btn sec" id="dBack" type="button">Voltar</button></div>'+
+   (r.historico&&r.historico.length?'<h3>Histórico</h3><p class="hint">'+r.historico.map(function(x){return esc(x.por)+" "+esc(x.acao)+" em "+fmtData(x.em)+" "+fmtHora(x.em);}).join("<br>")+'</p>':"");
+  ligarEnvio("d",txt,$("#dMsg"),function(){var x=achar(r.id);if(x){x.compartilhadoEm=new Date().toISOString();save();}});
+  var ed=$("#dEdit");if(ed)ed.onclick=function(){ir("novo",r.id);};
+  $("#dBack").onclick=function(){ir("servicos");};
+}
+
+/* ---------- serviços ---------- */
+function card(r,extra){
+  var st=stInfo(r.status),def=[r.falha,r.defeito].filter(Boolean).join(" - ");
+  return '<article class="card" data-id="'+esc(r.id)+'" tabindex="0">'+
+   '<div class="head"><div class="unit">'+esc(r.unidade)+(r.equipId?' · '+esc(r.equipId):"")+'</div><span class="pill '+st.c+'">'+esc(st.v.split("/")[0])+'</span></div>'+
+   '<div class="meta"><span class="pm">PM '+esc(r.pm||"a ser gerado")+'</span>'+(r.tInicio?'<span>'+fmtData(r.tInicio)+' '+fmtHora(r.tInicio)+(r.tFim?' às '+fmtHora(r.tFim):"")+'</span>':"")+'<span>'+esc(r.tipo)+'</span><span>'+esc(r.autor)+'</span></div>'+
+   (def?'<div class="desc">'+esc(def)+'</div>':"")+'<div class="flags">'+flags(r)+'</div>'+(extra||"")+'</article>';
+}
+function telaServicos(v){
+  var lista=S.registros.filter(function(r){return verEquipe?r.equipeNome===S.perfil.equipe:r.autorEmail===S.perfil.email;});
+  if(filtro==="hoje")lista=lista.filter(function(r){return String(r.tInicio).slice(0,10)===hoje()||String(r.tFim).slice(0,10)===hoje();});
+  if(filtro==="abertos")lista=lista.filter(function(r){return r.status==="Em atendimento"||r.status==="Cancelado/Remarcado/Aguardando programação"||r.status==="Recolhido para oficina/COF";});
+  lista.sort(function(a,b){return String(b.tInicio||"").localeCompare(String(a.tInicio||""));});
+  var h='<h2>'+(verEquipe?"Serviços da equipe":"Meus serviços")+'</h2>'+
+   '<div class="chips" id="sF" style="margin-bottom:10px">'+[["hoje","Hoje"],["abertos","Em aberto"],["todos","Todos"]].map(function(x){return '<button type="button" class="chip" aria-pressed="'+(filtro===x[0])+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join("")+
+   '<button type="button" class="chip" id="sEq" aria-pressed="'+verEquipe+'">Equipe toda</button></div>'+
+   '<div class="actions" style="margin-bottom:14px"><button class="btn" id="sNovo" type="button">Novo atendimento</button><button class="btn sec" id="sBol" type="button"'+(lista.length?"":" disabled")+'>Compartilhar '+(filtro==="hoje"?"os de hoje":"esta lista")+'</button></div>';
+  h+=lista.length?'<div class="list" id="sL">'+lista.map(function(r){return card(r);}).join("")+'</div>':
+    '<div class="empty">'+(S.registros.length?"Nenhum serviço neste filtro.":"Nenhum serviço registrado ainda. Toque em <strong>Novo atendimento</strong> para começar.")+'</div>';
+  h+='<div id="sBox"></div>';
+  v.innerHTML=h;
+  $("#sF").addEventListener("click",function(e){var b=e.target.closest(".chip");if(!b)return;if(b.id==="sEq")verEquipe=!verEquipe;else filtro=b.dataset.v;render();});
+  $("#sNovo").onclick=function(){ir("novo");};
+  var L=$("#sL");if(L){L.addEventListener("click",function(e){var c=e.target.closest("[data-id]");if(c)ir("detalhe",c.dataset.id);});
+    L.addEventListener("keydown",function(e){if(e.key==="Enter"){var c=e.target.closest("[data-id]");if(c)ir("detalhe",c.dataset.id);}});}
+  $("#sBol").onclick=function(){
+    var txt=msgBoletim(lista,"Balanço dos Serviços - "+(verEquipe?S.perfil.equipe:S.perfil.nome)+" - "+fmtData(nowLocal()));
+    $("#sBox").innerHTML='<h3>Boletim pronto</h3><div class="msgbox" id="bMsg">'+esc(txt)+'</div>'+botoesEnvio("b");
+    ligarEnvio("b",txt,$("#bMsg"),function(){var t=new Date().toISOString();lista.forEach(function(r){var x=achar(r.id);if(x)x.compartilhadoEm=t;});save();});
+    $("#sBox").scrollIntoView({behavior:"smooth",block:"start"});
+  };
+}
+
+/* ---------- fila de OS (responsável) ---------- */
+function telaOS(v){
+  if(!ehResp()){ir("servicos");return;}
+  var lista=S.registros.filter(function(r){return filtroOS==="pend"?r.osStatus!=="Fechada no sistema":true;});
+  lista.sort(function(a,b){return String(a.tInicio||"").localeCompare(String(b.tInicio||""));});
+  var h='<h2>Fila de OS</h2><p class="lead">Lance o número da PM e marque quando a OS for aberta e fechada no sistema. Precisa de internet para gravar na base.</p>'+
+   '<div class="chips" id="oF" style="margin-bottom:12px">'+[["pend","Pendentes"],["todas","Todas"]].map(function(x){return '<button type="button" class="chip" aria-pressed="'+(filtroOS===x[0])+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join("")+'</div>';
+  h+=lista.length?'<div class="list" id="oL">'+lista.map(function(r){
+    return card(r,'<div class="inline-edit"><input aria-label="Número da PM" inputmode="numeric" placeholder="Número da PM" value="'+esc(r.pm)+'" data-pm="'+esc(r.id)+'"><button type="button" class="btn sec small" data-savepm="'+esc(r.id)+'">Salvar PM</button></div>'+
+      '<div class="chips">'+OSST.map(function(s){return '<button type="button" class="chip" data-os="'+esc(r.id)+'" data-v="'+s+'" aria-pressed="'+((r.osStatus||"Não lançada")===s)+'">'+s+'</button>';}).join("")+'</div>');
+  }).join("")+'</div>':'<div class="empty">Nenhuma OS pendente.</div>';
+  v.innerHTML=h;
+  $("#oF").addEventListener("click",function(e){var b=e.target.closest(".chip");if(!b)return;filtroOS=b.dataset.v;render();});
+  var L=$("#oL");if(!L)return;
+  L.addEventListener("click",function(e){
+    var t=e.target;
+    if(t.dataset.savepm){osAtualizar(t.dataset.savepm,{pm:L.querySelector('[data-pm="'+t.dataset.savepm+'"]').value.trim()});return;}
+    if(t.dataset.os){osAtualizar(t.dataset.os,{osStatus:t.dataset.v});return;}
+    if(t.closest("input,button"))return;
+    var c=t.closest("[data-id]");if(c)ir("detalhe",c.dataset.id);
+  });
+}
+function osAtualizar(id,mud){
+  if(!online()){toast("Sem internet. A fila de OS precisa de conexão para gravar.");return;}
+  var r=achar(id);
+  if(r&&pendentes().some(function(x){return x.id===id;})){toast("Este atendimento ainda não chegou na base. Sincronize primeiro.");return;}
+  api("os",Object.assign({id:id},mud)).then(function(j){if(!j.ok)throw new Error(j.erro);mesclar(j.registro);save();toast(mud.pm!==undefined?"PM salva":"OS: "+mud.osStatus);render();})
+    .catch(function(e){toast(e.message);});
+}
+
+/* ---------- iniciar ---------- */
+render();
+if(S.token)sincronizar();
+if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost")){navigator.serviceWorker.register("sw.js").catch(function(){});}
+window.__teste={msgServico:msgServico,msgBoletim:msgBoletim,validar:validar,mesclar:mesclar,S:function(){return S;}};
+})();
+</script>
+</body>
+</html>
