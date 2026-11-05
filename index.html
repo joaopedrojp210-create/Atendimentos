@@ -129,7 +129,13 @@ var KEY="registro-atendimentos-v2";
 var TIPOS=["Corretiva emergencial","Corretiva programada","Preventiva","Preditiva","Inspeção"];
 var IMPACTOS=["Parada total","Perda parcial de vazão","Sem impacto"];
 var EQUIP=["CMB","Motor","Painel elétrico","Softstart/inversor","Transformador","Válvula/registro","Atuador/motorredutor","Bomba de esgotamento","Outro"];
-var FALHAS=["Não aciona","Desarme por sobrecarga","Desarme por nível","Vazamento em gaxeta","Ruído anormal","Vibração","Travamento","Falta de energia","Outro"];
+/* Listas iguais às do Alpha (IFS) - tiradas da base de OS */
+var TIPOS_FALHA=["1 - ELETRICA","2 - MECANICA","3 - ELETRONICA","4 - PREDIAL","5 - HIDRAULICA","6 - AMBIENTAL","7 - LOGICA","8 - ELETROMECANICA","9 - TELECOMUNICAÇÃO","10 - AUTOMACAO","11 - TELEMETRIA","12 - RADIO DE VOZ","13 - MEDIDORES","15 - TACOGRAFO"];
+var CLASSES_FALHA=["1 - PESSOAL DESQUALIFICADO","2 - PROCEDIMENTO INCORRETO","3 - FALTA DE PROCEDIMENTO","4 - DIMENSIONAMENTO INCORRETO","5 - FALTA DE MANUTENCAO","6 - MANUTENCAO INADEQUADA","7 - FALTA DE PECA DE REPOSICAO","8 - INSUFICIENCIA DE MAO-DE-OBRA","9 - FALHA DE COMUNICACAO","10 - FALTA DE SEGURANCA PATRIMONIAL","11 - DEFICIENCIA SERVICO DE TERCEIRO","12 - VIDA UTIL ULTRAPASSADA","13 - FENOMENO NATURAL","14 - NEGLIGENCIA DE PESSOAL","15 - ACAO ANIMAL","16 - FALHA NO FORNECIMENTO DE ENERGIA ELETRICA CONCESSIONARIA","17 - ADEQUACAO DA UNIDADE","18 - MANUTENCAO PLANEJADA"];
+var ACOES_EXEC=["1 - INSPECIONADO","2 - DIAGNOSTICADO","3 - MEDIDO","4 - LUBRIFICADO","5 - SUBSTITUIDO","6 - CALIBRADO/AJUSTADO","7 - LIMPO","8 - DADOS COLETADOS","9 - DESOBSTRUIDO","10 - REMOVIDO","11 - TESTADO","12 - MONTADO","13 - DESMONTADO","14 - INSTALADO","15 - DESENVOLVIDO","16 - CADASTRADO","17 - RELOCADO","18 - APLICADO","19 - CONFECCIONADO","20 - CONSTRUIDO","21 - PROGRAMADO","22 - PARAMETRIZADO","23 - PESCADO","24 - TRANSPORTADO","25 - ACOPLADO","26 - ALINHADO","27 - RECUPERADO","28 - ICADO","29 - PROJETADO","30 - PODADO","31 - GARANTIA","32 - ADQUIRIDO"];
+var GERENCIAS=["GAD","GAS","GGE","GMM","GPA","GTO"];
+var COORDENACOES=["CCO","CEM","CEM AG M","CEM RMR","CEM SERT","CMG","CMP","COF AG M","COF ELET","COF LAB","COF MEC","COF NAM","COF SERT","COI RMR","CPI","CPR A C","CPR AG M","CPR AL C","CPR AL P","CPR ARAR","CPR IPOJ","CPR M S","CPR MA N","CPR MOXO","CPR PAJE","CPR RUS","CPR S C","CSM AG M","CSM AGRE","CSM IPOJ","CSM MATN","CSM MATS","CSM MOXO","CSM NORT","CSM OEST","CSM PAJE","CSM RUSS","CSM S SF","CSM SERT","CSM SUL","GTO CARU","GTO COI","GTO CONT","GTO GRAV","GTO LAB","GTO NORT","GTO OEST","GTO PETR","GTO SERR","GTO SUL"];
+var CARGOS=["Operador","Eletricista","Mecânico","Técnico de manutenção","Técnico eletromecânico","Encarregado","Supervisor","Coordenador","Engenheiro"];
 var STATUS=[
   {v:"Em atendimento",c:"s-atend",e:"🟡"},
   {v:"Resolvido",c:"s-ok",e:"🟢"},
@@ -138,13 +144,15 @@ var STATUS=[
   {v:"Recolhido para oficina/COF",c:"s-cof",e:"⚫"}
 ];
 var OSST=["Não lançada","Aberta no sistema","Fechada no sistema"];
-var REGIOES_PADRAO=["CSM Arcoverde","CSM Pajeú","CSM Moxotó","CSM Alto Pajeú","CSM Norte","CSM Oeste/Leste","CSM Sul","CPM"];
+var REGIOES_PADRAO=["AGRESTE CENTRAL","AGRESTE MERIDIONAL","ALTO CAPIBARIBE","ALTO PAJEÚ","ARARIPE","IPOJUCA","MATA NORTE","MATA SUL","MOXOTÓ","NORTE","OESTE","PAJEÚ","RUSSAS","SÃO FRANCISCO","SERTÃO CENTRAL","SUL"];
 var OUTRA="__digitar";
 
 /* ---------- armazenamento no aparelho ---------- */
 function vazio(){return {token:null,perfil:null,registros:[],unidades:[],regioes:REGIOES_PADRAO.slice(),pessoas:[],ultimaSync:null};}
 var S=vazio(), storageOk=true;
 try{var raw=localStorage.getItem(KEY);if(raw)S=Object.assign(vazio(),JSON.parse(raw));}catch(e){storageOk=false;}
+/* versões antigas guardavam a lista de CSMs; a lista vem agora das regionais e da planilha */
+S.regioes=REGIOES_PADRAO.concat(S.regioes.filter(function(x){return REGIOES_PADRAO.indexOf(x)<0&&S.unidades.some(function(u){return u.regiao===x;});}));
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S));storageOk=true;}catch(e){storageOk=false;}}
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
 
@@ -233,7 +241,7 @@ function linhaHorario(r){
 function msgServico(r){
   var st=stInfo(r.status),L=[];
   L.push("*Balanço dos Serviços - "+(r.regiao||"")+"*");L.push("");
-  L.push("*Local:* "+(r.unidade||"")+(r.idObj?" (ID objeto "+r.idObj+")":""));
+  L.push("*Local:* "+(r.unidade||"")+(r.idObj?" (ID objeto "+r.idObj+")":(r.cc?" (CC "+r.cc+")":"")));
   L.push("*PM:* "+(r.pm||"A ser gerado"));
   if(r.tInicio)L.push("*Data:* "+fmtData(r.tInicio));
   L.push("*Equipe:* "+(r.equipe||[]).join(", "));
@@ -242,8 +250,11 @@ function msgServico(r){
   L.push("*Tipo Manut.:* "+(r.tipo||""));
   if(r.impacto&&r.impacto!=="Sem impacto")L.push("*Impacto:* "+r.impacto);
   L.push(st.e+" *Status:* "+r.status);
+  if(r.tipoFalha)L.push("*Tipo Falha:* "+r.tipoFalha);
+  if(r.classe)L.push("*Classe:* "+r.classe);
   var def=[r.falha,r.defeito].filter(Boolean).join(" - ");
   if(def)L.push("*Defeito:* "+def);
+  if(r.acaoExec)L.push("*Ação Executada:* "+r.acaoExec);
   if(r.acao)L.push("*Resumo:* "+r.acao);
   var h=linhaHorario(r);if(h)L.push(h);
   if(r.obs){L.push("");L.push("Obs.: "+r.obs);}
@@ -259,7 +270,7 @@ function msgBoletim(lista,titulo){
     Object.keys(porReg).forEach(function(rg){
       L.push("*"+rg+":*");
       porReg[rg].forEach(function(r){
-        var def=[r.falha,r.defeito].filter(Boolean).join(" - ");
+        var def=[r.tipoFalha,r.falha,r.defeito].filter(Boolean).join(" - ");
         L.push(stInfo(r.status).e+"PM "+(r.pm||"A ser gerado")+" - "+(r.unidade||"")+(r.equipId?" - "+r.equipId:"")+(def?" - "+def+".":""));
         if(r.acao)L.push("*"+r.acao+"*");
         var h=linhaHorario(r);if(h)L.push(h.replace(/\*/g,""));
@@ -343,20 +354,30 @@ function telaEntrar(v){
     }).catch(function(err){$("#eErr").textContent=online()?err.message:"Sem internet. Conecte-se para entrar pela primeira vez.";travar(f,false);});
   });
 }
+var OUTRA_OPC="__outra";
+function campoOutro(id,rot,lista){
+  return '<div class="field"><label for="'+id+'">'+rot+' <span class="req">*</span></label><select id="'+id+'">'+opts(lista,"","Escolha")+'<option value="'+OUTRA_OPC+'">Outra: digitar</option></select>'+
+    '<input id="'+id+'Txt" placeholder="Digite a '+rot.toLowerCase()+'" hidden></div>';
+}
+function ligarOutro(id){$("#"+id).addEventListener("change",function(){var t=$("#"+id+"Txt");t.hidden=this.value!==OUTRA_OPC;if(!t.hidden)t.focus();});}
+function valorOutro(id){var v=$("#"+id).value;return v===OUTRA_OPC?$("#"+id+"Txt").value.trim().toUpperCase():v;}
 function telaCadastrar(v){
   v.innerHTML=cabLogin("Primeiro acesso","Você vai receber um código no seu e-mail corporativo para confirmar.")+
    '<form id="fC"><div class="field"><label for="cEmail">E-mail corporativo <span class="req">*</span></label><input id="cEmail" type="email" autocomplete="username" placeholder="nome@'+DOMINIO+'" required></div>'+
    '<div class="field"><label for="cNome">Nome <span class="req">*</span></label><input id="cNome" autocomplete="name" required></div>'+
-   '<div class="field"><label for="cEquipe">Equipe <span class="req">*</span></label><input id="cEquipe" placeholder="Ex.: Eletromecânica Arcoverde" required></div>'+
-   '<div class="field"><label for="cReg">Região / CSM <span class="req">*</span></label><select id="cReg" required>'+opts(S.regioes,"","Escolha")+'</select></div>'+
+   '<div class="field"><label for="cCargo">Cargo <span class="req">*</span></label><input id="cCargo" list="lCargos" placeholder="Escolha ou escreva" required><datalist id="lCargos">'+CARGOS.map(function(x){return '<option value="'+esc(x)+'">';}).join("")+'</datalist></div>'+
+   campoOutro("cGer","Gerência",GERENCIAS)+campoOutro("cCoord","Coordenação",COORDENACOES)+
+   '<div class="field"><label for="cReg">Regional <span class="req">*</span></label><select id="cReg" required>'+opts(S.regioes,"","Escolha")+'</select></div>'+
    '<div class="field"><label for="cSenha">Crie uma senha <span class="req">*</span></label><input id="cSenha" type="password" autocomplete="new-password" minlength="6" required><span class="hint">Mínimo de 6 caracteres.</span></div>'+
    '<p class="err" id="cErr" role="alert"></p><button class="btn block" type="submit">Enviar código</button></form>'+
    '<button class="link" id="cVolta" type="button">Já tenho cadastro</button></div>';
   $("#cVolta").onclick=function(){aviso="";ir("entrar");};
+  ligarOutro("cGer");ligarOutro("cCoord");
   $("#fC").addEventListener("submit",function(e){e.preventDefault();var f=this;
-    var d={email:$("#cEmail").value.trim().toLowerCase(),nome:$("#cNome").value.trim(),equipe:$("#cEquipe").value.trim(),regiao:$("#cReg").value,senha:$("#cSenha").value};
+    var coord=valorOutro("cCoord");
+    var d={email:$("#cEmail").value.trim().toLowerCase(),nome:$("#cNome").value.trim(),cargo:$("#cCargo").value.trim(),gerencia:valorOutro("cGer"),coordenacao:coord,equipe:coord,regiao:$("#cReg").value,senha:$("#cSenha").value};
     if(d.email.split("@")[1]!==DOMINIO){$("#cErr").textContent="Use seu e-mail @"+DOMINIO+".";return;}
-    if(!d.nome||!d.equipe||!d.regiao){$("#cErr").textContent="Preencha nome, equipe e região.";return;}
+    if(!d.nome||!d.cargo||!d.gerencia||!d.coordenacao||!d.regiao){$("#cErr").textContent="Preencha nome, cargo, gerência, coordenação e regional.";return;}
     if(d.senha.length<6){$("#cErr").textContent="A senha precisa ter pelo menos 6 caracteres.";return;}
     travar(f,true);
     api("cadastrar",d).then(function(j){if(!j.ok)throw new Error(j.erro);emailPend=d.email;aviso="Enviamos um código para "+d.email+". Confira também a caixa de spam.";ir("confirmar");})
@@ -405,13 +426,13 @@ function entrou(j){
 /* ---------- perfil ---------- */
 function telaPerfil(v){
   var p=S.perfil;var pend=pendentes().length;
-  v.innerHTML='<h2>Perfil</h2><div class="card"><strong>'+esc(p.nome)+'</strong><span class="hint">'+esc(p.email)+'</span><span>'+esc(p.equipe)+' · '+esc(p.regiao)+'</span><span class="pill s-coi" style="align-self:flex-start">'+esc(p.papel)+'</span></div>'+
+  v.innerHTML='<h2>Perfil</h2><div class="card"><strong>'+esc(p.nome)+'</strong><span class="hint">'+esc(p.email)+'</span><span>'+[p.cargo,p.gerencia,p.equipe,p.regiao].filter(Boolean).map(esc).join(" · ")+'</span><span class="pill s-coi" style="align-self:flex-start">'+esc(p.papel)+'</span></div>'+
    (!storageOk?'<div class="notice bad">Este navegador não está deixando salvar dados no aparelho. Não use modo anônimo.</div>':"")+
    '<h3>Sincronização</h3><p class="lead">'+(pend?pend+" atendimento(s) aguardando envio.":"Tudo enviado para a base.")+(S.ultimaSync?" Última sincronização: "+fmtData(S.ultimaSync)+" "+fmtHora(S.ultimaSync)+".":"")+'</p>'+
    (erroSync&&online()?'<div class="notice warn">Última tentativa falhou: '+esc(erroSync)+'</div>':"")+
    '<div class="actions"><button class="btn sec" id="pSync" type="button">Sincronizar agora</button></div>'+
    '<h3>Instalar no celular</h3><p class="lead">No Android (Chrome): menu de três pontos e "Instalar app" ou "Adicionar à tela inicial". No iPhone (Safari): botão Compartilhar e "Adicionar à Tela de Início". Depois de instalado, o app abre mesmo sem internet.</p>'+
-   '<h3>Conta</h3><p class="lead">Para mudar equipe, região ou função, fale com o administrador da planilha.</p>'+
+   '<h3>Conta</h3><p class="lead">Para mudar cargo, gerência, coordenação, regional ou função, fale com o administrador da planilha.</p>'+
    '<div class="actions"><button class="btn ghost" id="pSair" type="button">Sair deste aparelho</button></div><p class="err" id="pErr"></p>';
   $("#pSync").onclick=function(){if(!online()){toast("Sem internet agora. Os registros sobem sozinhos quando a conexão voltar.");return;}sincronizar(true);};
   $("#pSair").onclick=function(){
@@ -427,7 +448,7 @@ function telaForm(v){
   var pessoas=S.pessoas.slice();(r.equipe||[]).forEach(function(n){if(pessoas.indexOf(n)<0)pessoas.push(n);});
   var regioes=S.regioes.slice();if(r.regiao&&regioes.indexOf(r.regiao)<0)regioes.push(r.regiao);
   var h='<h2>'+(base?"Atualizar atendimento":"Novo atendimento")+'</h2><p class="lead">Salva no celular mesmo sem internet. <span class="req">*</span> = obrigatório.</p><form id="fAt" novalidate>'+
-   '<h3>Local</h3><div class="field"><label for="fReg">Região / CSM <span class="req">*</span></label><select id="fReg">'+opts(regioes,r.regiao,"Escolha a região")+'</select></div>'+
+   '<h3>Local</h3><div class="field"><label for="fReg">Regional <span class="req">*</span></label><select id="fReg">'+opts(regioes,r.regiao,"Escolha a regional")+'</select></div>'+
    '<div class="field"><label for="fUn">Unidade <span class="req">*</span></label><input id="fBusca" type="search" placeholder="Buscar unidade" aria-label="Buscar unidade" hidden><select id="fUn"></select>'+
    '<input id="fUnOutra" placeholder="Digite o nome da unidade" hidden><span class="hint" id="fUnInfo"></span></div>'+
    '<div class="row"><div class="field"><label for="fPm">Número da PM / OS</label><input id="fPm" inputmode="numeric" placeholder="A ser gerado" value="'+esc(r.pm)+'"></div>'+
@@ -435,9 +456,11 @@ function telaForm(v){
    '<div class="field"><label for="fEqId">Identificação do equipamento</label><input id="fEqId" placeholder="Ex.: CMB 02" value="'+esc(r.equipId)+'"></div>'+
    '<h3>Tipo e impacto</h3><div class="field"><label>Tipo de manutenção <span class="req">*</span></label><div class="chips" data-grp="tipo">'+TIPOS.map(function(t){return '<button type="button" class="chip" aria-pressed="'+(r.tipo===t)+'" data-v="'+t+'">'+t+'</button>';}).join("")+'</div></div>'+
    '<div class="field"><label>Impacto na operação <span class="req">*</span></label><div class="chips" data-grp="impacto">'+IMPACTOS.map(function(t){return '<button type="button" class="chip" aria-pressed="'+(r.impacto===t)+'" data-v="'+t+'">'+t+'</button>';}).join("")+'</div></div>'+
-   '<h3>Falha e serviço</h3><div class="field"><label for="fFalha">Modo de falha</label><select id="fFalha">'+opts(FALHAS,r.falha,"Escolha")+'</select></div>'+
+   '<h3>Falha e serviço</h3><div class="field"><label for="fTF">Tipo de falha</label><select id="fTF">'+opts(TIPOS_FALHA,r.tipoFalha,"Escolha")+'</select><span class="hint">Mesma lista do Alpha.</span></div>'+
+   '<div class="field"><label for="fCl">Classe (causa da falha)</label><select id="fCl">'+opts(CLASSES_FALHA,r.classe,"Escolha, se souber")+'</select></div>'+
    '<div class="field"><label for="fDef">Descrição do defeito</label><input id="fDef" placeholder="Ex.: suspeita de problema no acoplamento" value="'+esc(r.defeito)+'"></div>'+
    '<div class="field"><label for="fDir">Diretriz / serviço solicitado</label><input id="fDir" placeholder="Ex.: retirar e lavar filtros dos quartos de comando" value="'+esc(r.diretriz)+'"></div>'+
+   '<div class="field"><label for="fAE">Ação executada</label><select id="fAE">'+opts(ACOES_EXEC,r.acaoExec,"Escolha")+'</select></div>'+
    '<div class="field"><label for="fAcao">O que foi feito (feedback)</label><textarea id="fAcao" placeholder="Ex.: retirados e lavados os filtros, limpeza dos ventiladores">'+esc(r.acao)+'</textarea></div>'+
    '<h3>Equipe presente</h3><div class="chips" id="fPessoas">'+pessoas.map(function(n){return '<button type="button" class="chip" aria-pressed="'+((r.equipe||[]).indexOf(n)>=0)+'" data-v="'+esc(n)+'">'+esc(n)+'</button>';}).join("")+'</div>'+
    '<div class="inline-edit" style="margin-top:8px"><input id="fNovaP" aria-label="Adicionar pessoa" placeholder="Adicionar nome"><button type="button" class="btn sec small" id="fAddP">Adicionar</button></div>'+
@@ -464,7 +487,7 @@ function telaForm(v){
     $("#fBusca").hidden=lista.length<=10;
     var vis=q?lista.filter(function(u){return u.nome.toLowerCase().indexOf(q)>=0;}):lista;
     var atual=manter!==undefined?manter:$("#fUn").value;
-    $("#fUn").innerHTML=(rg?'<option value="">'+(lista.length?"Escolha a unidade":"Nenhuma unidade cadastrada nesta região")+'</option>':'<option value="">Escolha primeiro a região</option>')+
+    $("#fUn").innerHTML=(rg?'<option value="">'+(lista.length?"Escolha a unidade":"Nenhuma unidade cadastrada nesta regional")+'</option>':'<option value="">Escolha primeiro a regional</option>')+
       vis.map(function(u){return '<option'+(u.nome===atual?" selected":"")+'>'+esc(u.nome)+'</option>';}).join("")+
       (rg?'<option value="'+OUTRA+'"'+(atual===OUTRA?" selected":"")+'>Não encontrei a unidade: digitar</option>':"");
     $("#fUn").disabled=!rg;infoUn();
@@ -487,7 +510,7 @@ function telaForm(v){
     var digitada=$("#fUn").value===OUTRA, un=digitada?$("#fUnOutra").value.trim():$("#fUn").value;
     var u=digitada?null:S.unidades.find(function(x){return x.nome===un&&x.regiao===$("#fReg").value;});
     Object.assign(r,{regiao:$("#fReg").value,unidade:un,unidadeDigitada:digitada,idObj:u?u.idObj:"",cc:u?u.cc:"",pm:$("#fPm").value.trim(),
-      equipamento:$("#fEq").value,equipId:$("#fEqId").value.trim(),tipo:sel.tipo,impacto:sel.impacto,falha:$("#fFalha").value,
+      equipamento:$("#fEq").value,equipId:$("#fEqId").value.trim(),tipo:sel.tipo,impacto:sel.impacto,tipoFalha:$("#fTF").value,classe:$("#fCl").value,acaoExec:$("#fAE").value,
       defeito:$("#fDef").value.trim(),diretriz:$("#fDir").value.trim(),acao:$("#fAcao").value.trim(),
       equipe:Array.prototype.map.call(v.querySelectorAll('#fPessoas .chip[aria-pressed="true"]'),function(c){return c.dataset.v;}),
       status:$("#fSt").value,obs:$("#fObs").value.trim(),
@@ -500,7 +523,7 @@ function telaForm(v){
   });
 }
 function validar(r){
-  if(!r.regiao)return "Escolha a região.";
+  if(!r.regiao)return "Escolha a regional.";
   if(!r.unidade)return "Escolha a unidade ou digite o nome.";
   if(!r.equipamento)return "Escolha o equipamento.";
   if(!r.tInicio)return "Informe o horário de início do serviço.";
@@ -537,7 +560,7 @@ function telaDetalhe(v){
 
 /* ---------- serviços ---------- */
 function card(r,extra){
-  var st=stInfo(r.status),def=[r.falha,r.defeito].filter(Boolean).join(" - ");
+  var st=stInfo(r.status),def=[r.tipoFalha,r.falha,r.defeito].filter(Boolean).join(" - ");
   return '<article class="card" data-id="'+esc(r.id)+'" tabindex="0">'+
    '<div class="head"><div class="unit">'+esc(r.unidade)+(r.equipId?' · '+esc(r.equipId):"")+'</div><span class="pill '+st.c+'">'+esc(st.v.split("/")[0])+'</span></div>'+
    '<div class="meta"><span class="pm">PM '+esc(r.pm||"a ser gerado")+'</span>'+(r.tInicio?'<span>'+fmtData(r.tInicio)+' '+fmtHora(r.tInicio)+(r.tFim?' às '+fmtHora(r.tFim):"")+'</span>':"")+'<span>'+esc(r.tipo)+'</span><span>'+esc(r.autor)+'</span></div>'+
@@ -548,9 +571,9 @@ function telaServicos(v){
   if(filtro==="hoje")lista=lista.filter(function(r){return String(r.tInicio).slice(0,10)===hoje()||String(r.tFim).slice(0,10)===hoje();});
   if(filtro==="abertos")lista=lista.filter(function(r){return r.status==="Em atendimento"||r.status==="Cancelado/Remarcado/Aguardando programação"||r.status==="Recolhido para oficina/COF";});
   lista.sort(function(a,b){return String(b.tInicio||"").localeCompare(String(a.tInicio||""));});
-  var h='<h2>'+(verEquipe?"Serviços da equipe":"Meus serviços")+'</h2>'+
+  var h='<h2>'+(verEquipe?"Serviços da coordenação":"Meus serviços")+'</h2>'+
    '<div class="chips" id="sF" style="margin-bottom:10px">'+[["hoje","Hoje"],["abertos","Em aberto"],["todos","Todos"]].map(function(x){return '<button type="button" class="chip" aria-pressed="'+(filtro===x[0])+'" data-v="'+x[0]+'">'+x[1]+'</button>';}).join("")+
-   '<button type="button" class="chip" id="sEq" aria-pressed="'+verEquipe+'">Equipe toda</button></div>'+
+   '<button type="button" class="chip" id="sEq" aria-pressed="'+verEquipe+'">Minha coordenação</button></div>'+
    '<div class="actions" style="margin-bottom:14px"><button class="btn" id="sNovo" type="button">Novo atendimento</button><button class="btn sec" id="sBol" type="button"'+(lista.length?"":" disabled")+'>Compartilhar '+(filtro==="hoje"?"os de hoje":"esta lista")+'</button></div>';
   h+=lista.length?'<div class="list" id="sL">'+lista.map(function(r){return card(r);}).join("")+'</div>':
     '<div class="empty">'+(S.registros.length?"Nenhum serviço neste filtro.":"Nenhum serviço registrado ainda. Toque em <strong>Novo atendimento</strong> para começar.")+'</div>';

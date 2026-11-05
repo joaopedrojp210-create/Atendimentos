@@ -1,5 +1,5 @@
 /* Guarda o app no aparelho para abrir sem internet. Ao mudar o app, aumente a versão. */
-var VERSAO = "atendimentos-v2";
+var VERSAO = "atendimentos-v3";
 var ARQUIVOS = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", function (e) {
