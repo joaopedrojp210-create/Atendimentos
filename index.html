@@ -385,7 +385,8 @@ function telaRecuperar(v){
    '<button class="link" id="rVolta" type="button">Voltar</button></div>';
   $("#rVolta").onclick=function(){aviso="";ir("entrar");};
   $("#rEnviar").onclick=function(){var b=this;b.disabled=true;
-    api("recuperar",{email:$("#rEmail").value.trim().toLowerCase()}).then(function(){toast("Se o e-mail tiver cadastro, o código foi enviado.");b.disabled=false;})
+    var em=$("#rEmail").value.trim().toLowerCase();if(em.split("@")[1]!==DOMINIO){$("#rErr").textContent="Use seu e-mail @"+DOMINIO+".";b.disabled=false;return;}
+    api("recuperar",{email:em}).then(function(j){if(!j.ok)throw new Error("Não foi possível enviar o código: "+j.erro);$("#rErr").textContent="";toast("Se o e-mail tiver cadastro, o código foi enviado. Confira também o spam.");b.disabled=false;})
       .catch(function(err){$("#rErr").textContent=err.message;b.disabled=false;});};
   $("#fR").addEventListener("submit",function(e){e.preventDefault();var f=this;
     if($("#rSenha").value.length<6){$("#rErr").textContent="A senha precisa ter pelo menos 6 caracteres.";return;}
