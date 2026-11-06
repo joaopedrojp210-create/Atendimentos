@@ -251,7 +251,6 @@ function msgServico(r){
   if(r.impacto&&r.impacto!=="Sem impacto")L.push("*Impacto:* "+r.impacto);
   L.push(st.e+" *Status:* "+r.status);
   if(r.tipoFalha)L.push("*Tipo Falha:* "+r.tipoFalha);
-  if(r.classe)L.push("*Classe:* "+r.classe);
   var def=[r.falha,r.defeito].filter(Boolean).join(" - ");
   if(def)L.push("*Defeito:* "+def);
   if(r.acaoExec)L.push("*Ação Executada:* "+r.acaoExec);
@@ -457,7 +456,6 @@ function telaForm(v){
    '<h3>Tipo e impacto</h3><div class="field"><label>Tipo de manutenção <span class="req">*</span></label><div class="chips" data-grp="tipo">'+TIPOS.map(function(t){return '<button type="button" class="chip" aria-pressed="'+(r.tipo===t)+'" data-v="'+t+'">'+t+'</button>';}).join("")+'</div></div>'+
    '<div class="field"><label>Impacto na operação <span class="req">*</span></label><div class="chips" data-grp="impacto">'+IMPACTOS.map(function(t){return '<button type="button" class="chip" aria-pressed="'+(r.impacto===t)+'" data-v="'+t+'">'+t+'</button>';}).join("")+'</div></div>'+
    '<h3>Falha e serviço</h3><div class="field"><label for="fTF">Tipo de falha</label><select id="fTF">'+opts(TIPOS_FALHA,r.tipoFalha,"Escolha")+'</select><span class="hint">Mesma lista do Alpha.</span></div>'+
-   '<div class="field"><label for="fCl">Classe (causa da falha)</label><select id="fCl">'+opts(CLASSES_FALHA,r.classe,"Escolha, se souber")+'</select></div>'+
    '<div class="field"><label for="fDef">Descrição do defeito</label><input id="fDef" placeholder="Ex.: suspeita de problema no acoplamento" value="'+esc(r.defeito)+'"></div>'+
    '<div class="field"><label for="fDir">Diretriz / serviço solicitado</label><input id="fDir" placeholder="Ex.: retirar e lavar filtros dos quartos de comando" value="'+esc(r.diretriz)+'"></div>'+
    '<div class="field"><label for="fAE">Ação executada</label><select id="fAE">'+opts(ACOES_EXEC,r.acaoExec,"Escolha")+'</select></div>'+
@@ -510,7 +508,7 @@ function telaForm(v){
     var digitada=$("#fUn").value===OUTRA, un=digitada?$("#fUnOutra").value.trim():$("#fUn").value;
     var u=digitada?null:S.unidades.find(function(x){return x.nome===un&&x.regiao===$("#fReg").value;});
     Object.assign(r,{regiao:$("#fReg").value,unidade:un,unidadeDigitada:digitada,idObj:u?u.idObj:"",cc:u?u.cc:"",pm:$("#fPm").value.trim(),
-      equipamento:$("#fEq").value,equipId:$("#fEqId").value.trim(),tipo:sel.tipo,impacto:sel.impacto,tipoFalha:$("#fTF").value,classe:$("#fCl").value,acaoExec:$("#fAE").value,
+      equipamento:$("#fEq").value,equipId:$("#fEqId").value.trim(),tipo:sel.tipo,impacto:sel.impacto,tipoFalha:$("#fTF").value,acaoExec:$("#fAE").value,
       defeito:$("#fDef").value.trim(),diretriz:$("#fDir").value.trim(),acao:$("#fAcao").value.trim(),
       equipe:Array.prototype.map.call(v.querySelectorAll('#fPessoas .chip[aria-pressed="true"]'),function(c){return c.dataset.v;}),
       status:$("#fSt").value,obs:$("#fObs").value.trim(),
